@@ -24,7 +24,15 @@ export function RecommendationStepCard({
       </div>
 
       <div className={cn('flex-1', !isLast && 'pb-8')}>
-        <div className="rounded-xl border border-border/70 bg-card p-5 sm:p-6">
+        <div className="rounded-xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+              {step.order}단계
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">
+              {step.order === 1 ? '최우선 준비 항목' : step.order === 2 ? '핵심 역량 강화' : '실전 완성'}
+            </span>
+          </div>
           <h3 className="font-heading text-lg font-bold text-foreground">
             {step.title}
           </h3>

@@ -19,7 +19,7 @@ export function validatePrepInput(input: PrepInput): FieldErrors {
   const status = input.status.trim()
 
   if (!major) {
-    errors.major = '입력 내용을 작성해주세요.'
+    errors.major = '필수 정보를 입력해주세요.'
   } else if (major.length < SHORT_MIN) {
     errors.major = '전공은 2자 이상 입력해주세요.'
   } else if (major.length > SHORT_MAX) {
@@ -27,7 +27,7 @@ export function validatePrepInput(input: PrepInput): FieldErrors {
   }
 
   if (!role) {
-    errors.role = '입력 내용을 작성해주세요.'
+    errors.role = '필수 정보를 입력해주세요.'
   } else if (role.length < SHORT_MIN) {
     errors.role = '희망 직무는 2자 이상 입력해주세요.'
   } else if (role.length > SHORT_MAX) {
@@ -35,11 +35,11 @@ export function validatePrepInput(input: PrepInput): FieldErrors {
   }
 
   if (!status) {
-    errors.status = '입력 내용을 작성해주세요.'
+    errors.status = '필수 정보를 입력해주세요.'
   } else if (status.length < LONG_MIN) {
-    errors.status = '준비 현황은 10자 이상 입력해주세요.'
+    errors.status = '현재 준비 상황은 10자 이상 입력해주세요.'
   } else if (status.length > LONG_MAX) {
-    errors.status = '준비 현황은 1,000자 이내로 입력해주세요.'
+    errors.status = '현재 준비 상황은 1,000자 이내로 입력해주세요.'
   }
 
   return errors

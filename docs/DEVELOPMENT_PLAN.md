@@ -130,17 +130,17 @@ gantt
 - **목표:** 전공, 희망 직무, 준비 상황을 입력받고 글자 수 및 필수 입력 조건을 실시간 검증하는 기능 구현
 - **관련 PRD 섹션:** `3.2 입력 화면`, `3.3 준비 상황 확인 화면`, `4.1 사용자 입력`, `4.2 입력값 검증`, `5.1~5.3 예외 처리`
 - **주요 작업:**
-  1. [ ] **입력 필드 컴포넌트 구현 ([components/prep/input-step.tsx](file:///c:/job/components/prep/input-step.tsx))**
+  1. [x] **입력 필드 컴포넌트 구현 ([components/prep/input-step.tsx](file:///c:/job/components/prep/input-step.tsx))**
      - 전공: 1줄 텍스트 입력 (`2~50자`), 플레이스홀더: `전공을 입력하세요`
      - 희망 직무: 1줄 텍스트 입력 (`2~50자`), 플레이스홀더: `희망 직무를 입력하세요`
      - 현재 준비 상황: 여러 줄 텍스트 입력 (`10~1,000자`), 플레이스홀더: `현재까지 준비한 내용을 입력하세요`
      - 예시 데이터 불러오기 기능 (`handleFillExample`) 제공
-  2. [ ] **검증 엔진 구현 ([lib/validation.ts](file:///c:/job/lib/validation.ts))**
+  2. [x] **검증 엔진 구현 ([lib/validation.ts](file:///c:/job/lib/validation.ts))**
      - 빈 값 체크: `필수 정보를 입력해주세요.`
      - 최소 글자 수 미달: `전공과 희망 직무는 2자 이상, 준비 상황은 10자 이상 입력해주세요.`
      - 최대 글자 수 초과: `전공과 희망 직무는 50자 이내, 준비 상황은 1,000자 이내로 입력해주세요.`
      - 실시간 글자 수 카운터 (예: `45/50자`, `320/1,000자`) 및 에러 발생 필드 하이라이트
-  3. [ ] **준비 상황 확인 컴포넌트 ([components/prep/confirm-step.tsx](file:///c:/job/components/prep/confirm-step.tsx))**
+  3. [x] **준비 상황 확인 컴포넌트 ([components/prep/confirm-step.tsx](file:///c:/job/components/prep/confirm-step.tsx))**
      - 사용자가 입력한 전공/직무/준비상황을 카드 형태로 명확히 요약 표시
      - `수정하기` 클릭 시 입력값 그대로 유지하며 `input` 화면 복귀
      - `분석 시작` 클릭 시 검증 후 `loading` 단계 진입
@@ -154,21 +154,21 @@ gantt
 - **목표:** 사용자 입력을 바탕으로 직무 맞춤형 분석을 생성하고, PRD에 규정된 스키마 조건 충족 여부를 엄격히 검증
 - **관련 PRD 섹션:** `3.4 분석 중 화면`, `4.3 AI 분석`, `4.4 결과 검증`, `4.5 로딩 및 재시도`, `5.4~5.7 예외 처리`
 - **주요 작업:**
-  1. [ ] **로딩 상태 컴포넌트 구현 ([components/prep/loading-step.tsx](file:///c:/job/components/prep/loading-step.tsx))**
+  1. [x] **로딩 상태 컴포넌트 구현 ([components/prep/loading-step.tsx](file:///c:/job/components/prep/loading-step.tsx))**
      - 단계적 로딩 안내 문구 순차 전환:
        1) `현재 준비 상황을 분석하고 있어요.`
        2) `직무에 필요한 역량과 준비 순서를 정리하고 있어요.`
-       3) `맞춤형 로드맵을 구성하고 있습니다.`
+       3) `맞춤형 단계별 로드맵을 구성하고 있어요.`
      - 진행 게이지 애니메이션 및 중복 요청 방지 버튼 잠금
-  2. [ ] **AI 분석 로직 및 Mock 엔진 개발 ([lib/mock-analysis.ts](file:///c:/job/lib/mock-analysis.ts))**
-     - 직무별(프론트엔드, 백엔드, 데이터 분석, 마케팅, 기획 등) 도메인 특화 데이터 생성기
+  2. [x] **AI 분석 로직 및 Mock 엔진 개발 ([lib/mock-analysis.ts](file:///c:/job/lib/mock-analysis.ts))**
+     - 직무별(프론트엔드, 백엔드, 데이터 분석, 서비스 기획 등) 도메인 특화 데이터 생성기
      - **핵심 역량 5~7개** 생성 규칙 준수
      - **부족한 역량 및 판단 이유** 생성
      - **추천 준비 항목 최소 3개 이상** (단계, 우선순위, 추천 이유, 준비 방법, 다음 행동) 생성
-  3. [ ] **결과 유효성 검증기 (Result Validator)**
+  3. [x] **결과 유효성 검증기 (Result Validator - `validateAnalysisResult`)**
      - 응답 내 핵심 역량 개수(5~7개), 부족 역량 여부, 추천 항목(≥3개), 준비 방법/다음 행동 누락 여부 검사
      - 검증 실패 시 불완전한 결과 표출을 차단하고 `format_error` 또는 `insufficient` 에러 트리거
-  4. [ ] **20초 타임아웃 방어 로직 (`AbortController` / 타이머)**
+  4. [x] **20초 타임아웃 방어 로직 (`AbortController` / 타이머)**
      - 20초 초과 시 무한 로딩을 즉시 중단하고 타임아웃 안내 화면 표시
 - **완료 조건 (DoD):**
   - 정상 응답 시 20초 이내에 완전한 데이터 구조가 반환됨
@@ -180,19 +180,19 @@ gantt
 - **목표:** 분석 결과를 시각적으로 매력적이고 직관적인 4대 영역으로 렌더링하고, 단계별 순서(1→2→3단계) 확인 경험 완성
 - **관련 PRD 섹션:** `3.5 결과 화면`, `사용자 스토리 1~4`
 - **주요 작업:**
-  1. [ ] **종합 결과 뷰 구현 ([components/prep/result-step.tsx](file:///c:/job/components/prep/result-step.tsx))**
+  1. [x] **종합 결과 뷰 구현 ([components/prep/result-step.tsx](file:///c:/job/components/prep/result-step.tsx))**
      - 상단: 사용자 입력 요약 배너 및 직무 준비도 종합 스코어 배지
      - 4대 영역 순차 배치:
        - **① 핵심 역량 (5~7개):** 역량 명칭, 카테고리 태그, 핵심 설명 (`SkillCard`)
        - **② 부족한 역량:** 보완 필요 역량 및 부족 판단 사유 콜아웃
        - **③ 추천 준비 항목 (3개 이상):** `1단계 → 2단계 → 3단계` 타임라인 로드맵 (`RecommendationStepCard`)
        - **④ 다시 분석하기 버튼 영역**
-  2. [ ] **단계별 추천 항목 카드 컴포넌트 ([components/prep/recommendation-step-card.tsx](file:///c:/job/components/prep/recommendation-step-card.tsx))**
-     - 단계 배지 (Step 1, Step 2, Step 3) 및 우선순위 강조
+  2. [x] **단계별 추천 항목 카드 컴포넌트 ([components/prep/recommendation-step-card.tsx](file:///c:/job/components/prep/recommendation-step-card.tsx))**
+     - 단계 배지 (1단계, 2단계, 3단계) 및 우선순위 강조
      - 준비 항목명 및 추천 이유 (Why)
      - 구체적인 준비 방법 (How)
      - 즉각 실행할 수 있는 다음 행동 체크리스트 (Action Item)
-  3. [ ] **재분석 플로우 (`다시 분석하기`)**
+  3. [x] **재분석 플로우 (`다시 분석하기`)**
      - 기존 입력값(전공, 직무, 상황)을 100% 보존한 상태로 재요청
      - 신규 분석 성공 시 이전 결과를 원활하게 교체
 - **완료 조건 (DoD):**
@@ -205,9 +205,9 @@ gantt
 - **목표:** PRD 5장에 명시된 모든 예외 상황에 대한 명확한 에러 안내 및 데이터 보존 기반의 복구 기능 구현
 - **관련 PRD 섹션:** `5.1 ~ 5.11 예외 처리 공통 원칙`
 - **주요 작업:**
-  1. [ ] **상황별 에러 상태 컴포넌트 ([components/prep/error-state.tsx](file:///c:/job/components/prep/error-state.tsx))**
+  1. [x] **상황별 에러 상태 컴포넌트 ([components/prep/error-state.tsx](file:///c:/job/components/prep/error-state.tsx))**
      - 에러 유형별 맞춤 아이콘, 안내 문구, 직관적인 복구 버튼(`다시 시도`, `입력 수정하기`, `다시 분석하기`)
-  2. [ ] **10대 예외 케이스 완벽 구현 및 매핑:**
+  2. [x] **10대 예외 케이스 완벽 구현 및 매핑:**
      - `5.1 필수 입력 누락` → 인라인 에러 표시, 입력값 유지
      - `5.2 짧은 입력` → 최소 글자 수 가이드 제공
      - `5.3 긴 입력` → 최대 글자 수 가이드 제공
@@ -218,7 +218,7 @@ gantt
      - `5.8 직무 무관 결과` → `입력 수정하기`를 통해 입력 단계로 복귀
      - `5.9 네트워크 오류` → `네트워크 연결을 확인한 후 다시 시도해주세요.`
      - `5.10 중복 요청` → 버튼 `disabled` 및 로딩 중 클릭 이벤트 무효화
-  3. [ ] **예외 시나리오 검증 툴바 ([components/prep/scenario-preview.tsx](file:///c:/job/components/prep/scenario-preview.tsx))**
+  3. [x] **예외 시나리오 검증 툴바 ([components/prep/scenario-preview.tsx](file:///c:/job/components/prep/scenario-preview.tsx))**
      - 개발 및 테스트 시 10대 예외 상황을 즉각 시뮬레이션할 수 있는 컨트롤러 제공
 - **완료 조건 (DoD):**
   - 모든 예외 발생 시 화면이 깨지거나 흰 화면(Blank)이 되지 않음
@@ -230,10 +230,10 @@ gantt
 - **목표:** PRD 6장의 체크리스트 100% 충족 여부 검증 및 모바일 반응형/접근성 최종 점검
 - **관련 PRD 섹션:** `6) 완료 조건` (핵심 기능 15개, 예외 처리 10개, 범위 제한 8개)
 - **주요 작업:**
-  1. [ ] **PRD 완료 조건 전수 점검 및 단위/E2E 시나리오 테스트**
-  2. [ ] **성능 및 반응 속도 점검 (20초 이내 렌더링 확인)**
-  3. [ ] **크로스 브라우저 & 모바일 반응형 레이아웃 정밀 검수**
-  4. [ ] **범위 제한 항목(DB/로그인/결제 미구현) 준수 확인**
+  1. [x] **PRD 완료 조건 전수 점검 및 단위/E2E 시나리오 테스트**
+  2. [x] **성능 및 반응 속도 점검 (20초 이내 렌더링 확인)**
+  3. [x] **크로스 브라우저 & 모바일 반응형 레이아웃 정밀 검수**
+  4. [x] **범위 제한 항목(DB/로그인/결제 미구현) 준수 확인**
 - **완료 조건 (DoD):**
   - PRD 6장의 모든 체크박스가 충족됨
   - 콘솔 에러(Uncaught Error) 0건 달성

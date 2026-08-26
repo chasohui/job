@@ -21,6 +21,7 @@ import {
   EXAMPLE_INPUT,
   generateMockAnalysis,
   getLoadingMessages,
+  validateAnalysisResult,
   type AnalysisResult,
   type PrepInput,
   type ScenarioKey,
@@ -48,36 +49,36 @@ const ERROR_CONFIG: Record<
   },
   timeout: {
     icon: ClockAlertIcon,
-    title: '분석에 시간이 오래 걸리고 있어요.',
-    description: '잠시 후 다시 시도해주세요.',
+    title: '분석에 시간이 오래 걸리고 있습니다.',
+    description: '다시 시도해주세요.',
     actionLabel: '다시 시도',
     retryTarget: 'loading',
   },
   format_error: {
     icon: FileWarningIcon,
-    title: '결과를 불러오는 중 문제가 발생했습니다.',
-    description: '불완전한 결과는 보여드리지 않아요. 다시 분석해주세요.',
+    title: '결과를 완성하지 못했습니다.',
+    description: '불완전한 결과는 표시하지 않아요. 다시 분석해주세요.',
     actionLabel: '다시 분석하기',
     retryTarget: 'loading',
   },
   insufficient: {
     icon: ListXIcon,
-    title: '추천 결과가 충분하지 않습니다.',
-    description: '조금 더 정확한 준비 순서를 다시 정리해볼게요.',
+    title: '추천할 준비 항목이 충분하지 않습니다.',
+    description: '다시 분석해주세요.',
     actionLabel: '다시 분석하기',
     retryTarget: 'loading',
   },
   meaningless: {
     icon: SearchXIcon,
-    title: '직무에 맞는 분석 결과를 만들지 못했어요.',
-    description: '희망 직무와 준비 상황을 조금 더 구체적으로 입력해보세요.',
+    title: '직무에 맞는 분석 결과를 만들지 못했습니다.',
+    description: '희망 직무와 준비 상황을 조금 더 구체적으로 입력한 후 다시 시도해주세요.',
     actionLabel: '입력 수정하기',
     retryTarget: 'input',
   },
   network_error: {
     icon: WifiOffIcon,
-    title: '네트워크 연결에 문제가 있어요.',
-    description: '인터넷 연결을 확인한 후 다시 시도해주세요.',
+    title: '네트워크 연결에 문제가 있습니다.',
+    description: '네트워크 연결을 확인한 후 다시 시도해주세요.',
     actionLabel: '다시 시도',
     retryTarget: 'loading',
   },
@@ -114,12 +115,17 @@ export default function Page() {
     const resolveTimer = setTimeout(() => {
       clearInterval(phaseTimer)
       if (scenario === 'success') {
-        setAnalysis(generateMockAnalysis(input))
-        setStage('result')
+        const generated = generateMockAnalysis(input)
+        if (validateAnalysisResult(generated)) {
+          setAnalysis(generated)
+          setStage('result')
+        } else {
+          setStage('error')
+        }
       } else {
         setStage('error')
       }
-    }, messages.length * 800 + 500)
+    }, messages.length * 800 + 400)
 
     return () => {
       clearInterval(phaseTimer)

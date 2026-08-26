@@ -29,11 +29,6 @@ export function InputStep({
   onSubmit,
   onFillExample,
 }: InputStepProps) {
-  const canSubmit =
-    value.major.trim().length > 0 &&
-    value.role.trim().length > 0 &&
-    value.status.trim().length > 0
-
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 pt-10 pb-20 sm:px-6 sm:pt-16">
       <div className="animate-in fade-in slide-in-from-bottom-3 flex flex-col gap-4 duration-500">
@@ -59,7 +54,7 @@ export function InputStep({
             <FieldLabel htmlFor="major">전공</FieldLabel>
             <Input
               id="major"
-              placeholder="예: 경영학과"
+              placeholder="전공을 입력하세요 (예: 경영학과)"
               value={value.major}
               maxLength={80}
               aria-invalid={!!errors.major}
@@ -72,7 +67,7 @@ export function InputStep({
             <FieldLabel htmlFor="role">희망 직무</FieldLabel>
             <Input
               id="role"
-              placeholder="예: 서비스 기획자"
+              placeholder="희망 직무를 입력하세요 (예: 서비스 기획자)"
               value={value.role}
               maxLength={80}
               aria-invalid={!!errors.role}
@@ -85,7 +80,7 @@ export function InputStep({
             <FieldLabel htmlFor="status">현재 준비 상황</FieldLabel>
             <Textarea
               id="status"
-              placeholder="예: 관련 프로젝트 1회 경험, SQL 공부 중, 자격증 준비 중"
+              placeholder="현재까지 준비한 내용을 입력하세요 (예: 관련 프로젝트 1회 경험, 자격증 취득 등)"
               value={value.status}
               maxLength={1000}
               className="min-h-32 resize-none"
@@ -97,11 +92,11 @@ export function InputStep({
                 <FieldError>{errors.status}</FieldError>
               ) : (
                 <FieldDescription>
-                  경험, 학습 중인 내용, 자격증 준비 등을 자유롭게 적어주세요.
+                  경험, 학습 중인 내용, 자격증 준비 등을 10자 이상 자유롭게 적어주세요.
                 </FieldDescription>
               )}
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                {value.status.trim().length}/1,000
+                {value.status.trim().length}/1,000자
               </span>
             </div>
           </Field>
@@ -110,10 +105,9 @@ export function InputStep({
         <Button
           size="lg"
           onClick={onSubmit}
-          disabled={!canSubmit}
           className="mt-7 h-12 w-full text-[15px] font-semibold"
         >
-          내 준비 순서 확인하기
+          다음 (내 준비 순서 확인하기)
           <ArrowRightIcon data-icon="inline-end" />
         </Button>
 
