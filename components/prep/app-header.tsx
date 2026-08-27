@@ -10,7 +10,7 @@ export function AppHeader({ stage }: { stage: number }) {
             <Compass className="size-4" strokeWidth={2.25} />
           </span>
           <span className="font-heading text-[15px] font-bold tracking-tight text-foreground">
-            커리어 콤파스
+            Career Map
           </span>
         </div>
         <StageProgress current={stage} />

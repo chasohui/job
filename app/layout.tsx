@@ -19,7 +19,7 @@ const bodyFont = Noto_Sans_KR({
 })
 
 export const metadata: Metadata = {
-  title: '커리어 콤파스 | 지금 무엇부터 준비해야 할지 알려드려요',
+  title: 'Career Map | 지금 무엇부터 준비해야 할지 알려드려요',
   description:
     '전공, 희망 직무, 현재 준비 상황을 입력하면 지금 필요한 핵심 역량과 준비 순서를 정리해드리는 취업 준비 도우미 서비스입니다.',
   generator: 'v0.app',
