@@ -80,7 +80,7 @@ export function InputStep({
             <FieldLabel htmlFor="status">현재 준비 상황</FieldLabel>
             <Textarea
               id="status"
-              placeholder="현재까지 준비한 내용을 입력하세요 (예: 관련 프로젝트 1회 경험, 자격증 취득 등)"
+              placeholder="현재까지 준비한 내용을 입력하세요 (예: 관련 프로젝트 1회 경험, 자격증 취득 등 / 준비한 내용이 없다면 '없음' 입력)"
               value={value.status}
               maxLength={1000}
               className="min-h-32 resize-none"
@@ -92,7 +92,7 @@ export function InputStep({
                 <FieldError>{errors.status}</FieldError>
               ) : (
                 <FieldDescription>
-                  경험, 학습 중인 내용, 자격증 준비 등을 10자 이상 자유롭게 적어주세요.
+                  경험, 학습 내용, 자격증 등을 2자 이상 적어주세요. 아직 준비한 내용이 없다면 <strong>'없음'</strong>이라고 적어주셔도 좋아요.
                 </FieldDescription>
               )}
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">

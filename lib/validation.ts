@@ -8,8 +8,8 @@ export interface FieldErrors {
 
 const SHORT_MIN = 2
 const SHORT_MAX = 50
-const LONG_MIN = 10
-const LONG_MAX = 1000
+const STATUS_MIN = 2
+const STATUS_MAX = 1000
 
 export function validatePrepInput(input: PrepInput): FieldErrors {
   const errors: FieldErrors = {}
@@ -35,10 +35,10 @@ export function validatePrepInput(input: PrepInput): FieldErrors {
   }
 
   if (!status) {
-    errors.status = '필수 정보를 입력해주세요.'
-  } else if (status.length < LONG_MIN) {
-    errors.status = '현재 준비 상황은 10자 이상 입력해주세요.'
-  } else if (status.length > LONG_MAX) {
+    errors.status = '필수 정보를 입력해주세요. (준비된 내용이 없다면 "없음"으로 입력해주세요)'
+  } else if (status.length < STATUS_MIN) {
+    errors.status = '현재 준비 상황은 2자 이상 입력해주세요. (준비한 내용이 없다면 "없음" 입력)'
+  } else if (status.length > STATUS_MAX) {
     errors.status = '현재 준비 상황은 1,000자 이내로 입력해주세요.'
   }
 
