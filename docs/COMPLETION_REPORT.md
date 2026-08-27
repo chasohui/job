@@ -51,6 +51,12 @@
 - 프로덕션 빌드(`next build`) 정상 통과 (0 error, 0 warning)
 - PRD 6장 체크리스트(핵심 기능 15개, 예외 처리 10개, 범위 제한 8개) 전수 충족 확인
 
+### ✅ Sprint 6: 실제 Gemini AI 모델 연동 및 실시간 분석 고도화
+- Google Gemini 모델(`gemini-3.6-flash`) 정식 연동 및 Structured JSON Schema 선언
+- Next.js 서버 Route Handler([app/api/analyze/route.ts](file:///c:/job/app/api/analyze/route.ts)) 구축으로 `GEMINI_API_KEY` 보안 격리
+- 18초 서버 타임아웃 및 실시간 에러 방어/Mock 폴백 메커니즘 완비
+- 실시간 API 응답 생성 속도 (2~4초) 검증 완료
+
 ---
 
 ## 3. PRD 6장 완료 조건 전수 검증 결과

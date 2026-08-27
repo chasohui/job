@@ -112,24 +112,52 @@ export default function Page() {
       if (phase < messages.length) setActivePhase(phase)
     }, 800)
 
-    const resolveTimer = setTimeout(() => {
-      clearInterval(phaseTimer)
-      if (scenario === 'success') {
-        const generated = generateMockAnalysis(input)
-        if (validateAnalysisResult(generated)) {
-          setAnalysis(generated)
-          setStage('result')
+    let isCancelled = false
+
+    async function fetchAnalysis() {
+      try {
+        if (scenario === 'success') {
+          const res = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          })
+
+          const data = await res.json()
+
+          if (!isCancelled) {
+            clearInterval(phaseTimer)
+            if (data.success && validateAnalysisResult(data.data)) {
+              setAnalysis(data.data)
+              setStage('result')
+            } else {
+              setScenario('ai_fail')
+              setStage('error')
+            }
+          }
         } else {
+          // 시나리오 테스트용 딜레이
+          setTimeout(() => {
+            if (!isCancelled) {
+              clearInterval(phaseTimer)
+              setStage('error')
+            }
+          }, messages.length * 800 + 200)
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          clearInterval(phaseTimer)
+          setScenario('network_error')
           setStage('error')
         }
-      } else {
-        setStage('error')
       }
-    }, messages.length * 800 + 400)
+    }
+
+    fetchAnalysis()
 
     return () => {
+      isCancelled = true
       clearInterval(phaseTimer)
-      clearTimeout(resolveTimer)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, scenario])

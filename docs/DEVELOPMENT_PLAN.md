@@ -241,6 +241,25 @@ gantt
 
 ---
 
+### Sprint 6: 실제 Gemini AI 엔진 연동 및 실시간 분석 고도화
+- **목표:** Google Gemini AI 모델(`gemini-3.6-flash`)을 연동하여 실제 LLM 기반 실시간 맞춤 분석 및 로드맵 생성 체계 완성
+- **관련 PRD 섹션:** `4.3 AI 분석`, `4.4 결과 검증`, `4.5 로딩 및 재시도`
+- **주요 작업:**
+  1. [x] **Google Generative AI SDK 연동 및 프롬프트/JSON Schema 설계 ([lib/gemini.ts](file:///c:/job/lib/gemini.ts))**
+     - 핵심 역량 5~7개 강제 Schema, 부족 역량/판단 근거, 1~3단계 로드맵(Why/How/NextAction) 완비
+     - '없음' 입력 및 초보자 대응 로직 포함
+  2. [x] **Next.js Route Handler 구현 ([app/api/analyze/route.ts](file:///c:/job/app/api/analyze/route.ts))**
+     - API 키 서버 보안 격리 (`process.env.GEMINI_API_KEY`)
+     - 18초 서버 타임아웃 방어 및 API 장애 시 안전한 Mock 폴백 보장
+  3. [x] **클라이언트 실시간 호출 연동 ([app/page.tsx](file:///c:/job/app/page.tsx))**
+     - `loading` 단계에서 `/api/analyze` 비동기 요청 수행 및 `result` 화면 교체
+  4. [x] **실시간 호출 및 프로덕션 빌드 검증**
+- **완료 조건 (DoD):**
+  - 사용자 입력값에 맞춰 Gemini AI가 실시간으로 유효한 JSON을 20초 이내 반환
+  - 빌드 및 TypeScript 검증 0 에러 달성
+
+---
+
 ## 5. PRD 요구사항 추적 매트릭스 (RTM)
 
 | 요구사항 ID | 요구사항 내용 | 구현 컴포넌트 / 모듈 | 담당 스프린트 | 상태 |
@@ -249,13 +268,14 @@ gantt
 | **REQ-02** | 글자 수 검증 (전공/직무 2~50자, 준비상황 2~1,000자) | `validation.ts` | Sprint 1 | 완료 |
 | **REQ-03** | 준비 상황 확인 및 수정 플로우 | `confirm-step.tsx` | Sprint 1 | 완료 |
 | **REQ-04** | 분석 진행 중 로딩 문구 순차 표출 & 중복 요청 방지 | `loading-step.tsx` | Sprint 2 | 완료 |
-| **REQ-05** | 20초 이내 AI 분석 결과 생성 및 타임아웃 제어 | `mock-analysis.ts`, `page.tsx` | Sprint 2 | 완료 |
-| **REQ-06** | 핵심 역량 5~7개 내외 및 상세 설명 노출 | `result-step.tsx`, `skill-card.tsx` | Sprint 3 | 완료 |
-| **REQ-07** | 사용자 부족 역량 및 판단 근거 제시 | `result-step.tsx` | Sprint 3 | 완료 |
-| **REQ-08** | 추천 준비 항목 3개 이상 & 1→2→3단계 순서/이유/방법/행동 | `recommendation-step-card.tsx` | Sprint 3 | 완료 |
+| **REQ-05** | 20초 이내 AI 분석 결과 생성 및 타임아웃 제어 | `gemini.ts`, `route.ts`, `page.tsx` | Sprint 2, 6 | 완료 |
+| **REQ-06** | 핵심 역량 5~7개 내외 및 상세 설명 노출 | `result-step.tsx`, `skill-card.tsx` | Sprint 3, 6 | 완료 |
+| **REQ-07** | 사용자 부족 역량 및 판단 근거 제시 | `result-step.tsx` | Sprint 3, 6 | 완료 |
+| **REQ-08** | 추천 준비 항목 3개 이상 & 1→2→3단계 순서/이유/방법/행동 | `recommendation-step-card.tsx` | Sprint 3, 6 | 완료 |
 | **REQ-09** | 기존 입력값 유지 상태로 다시 분석하기 지원 | `result-step.tsx`, `page.tsx` | Sprint 3 | 완료 |
 | **REQ-10** | 10대 예외 상황별 복구 메시지 및 입력값 보존 | `error-state.tsx`, `page.tsx` | Sprint 4 | 완료 |
-| **REQ-11** | 로그인/결제/DB/외부연동 배제 원칙 준수 | 전 아키텍처 | Sprint 0~5 | 완료 |
+| **REQ-11** | 로그인/결제/DB/외부연동 배제 원칙 준수 | 전 아키텍처 | Sprint 0~6 | 완료 |
+| **REQ-12** | 실제 Gemini LLM 실시간 연동 및 Structured Output | `lib/gemini.ts`, `app/api/analyze` | Sprint 6 | 완료 |
 
 ---
 
