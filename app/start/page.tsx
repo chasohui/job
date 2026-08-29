@@ -117,11 +117,21 @@ export default function Page() {
     async function fetchAnalysis() {
       try {
         if (scenario === 'success') {
-          const res = await fetch('/api/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(input),
-          })
+          // 서버 자체 타임아웃(18초)이 응답을 못 주는 극단 상황을 대비한 클라이언트 측 최후 방어선 (PRD 4.5, 20초)
+          const controller = new AbortController()
+          const abortTimer = setTimeout(() => controller.abort(), 20000)
+
+          let res: Response
+          try {
+            res = await fetch('/api/analyze', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(input),
+              signal: controller.signal,
+            })
+          } finally {
+            clearTimeout(abortTimer)
+          }
 
           const data = await res.json()
 
@@ -147,7 +157,7 @@ export default function Page() {
       } catch (err) {
         if (!isCancelled) {
           clearInterval(phaseTimer)
-          setScenario('network_error')
+          setScenario(err instanceof DOMException && err.name === 'AbortError' ? 'timeout' : 'network_error')
           setStage('error')
         }
       }

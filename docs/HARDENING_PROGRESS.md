@@ -1,9 +1,9 @@
-# 프로덕션 하드닝 진행 상황 (P0)
+# 프로덕션 하드닝 진행 상황
 
 > **작성 일자:** 2026-08-29
-> **배경:** 배포 전 코드베이스 점검에서 발견된 P0(즉시 조치) 항목 처리 기록
+> **배경:** 배포 전 코드베이스 점검에서 발견된 항목 처리 기록 (P0 → P1 순)
 
-## 완료된 항목
+## P0 — 완료된 항목
 
 ### 1. 개발용 시나리오 스위처 프로덕션 노출 차단
 - **문제:** `app/start/page.tsx`에서 `<ScenarioPreview>`가 조건 없이 렌더링되어, 실사용자가 화면 우하단 버튼으로 AI 실패/타임아웃/네트워크 오류 등 에러 상태를 임의로 트리거할 수 있었음.
@@ -30,12 +30,32 @@
 - **미사용 프로토타입 아카이브:** 루트에 방치되어 있던 v0 초기 프로토타입 `code.html`(현재 앱과 무관한 "Zenith Career Logic" 타이틀)을 삭제 대신 `docs/archive/code.html`로 이동 — 디자인 문서에서 과거 참조용으로 언급되고 있어 추적성을 위해 보존.
 - **README 복구:** UTF-16 인코딩 깨짐 + 내용 없는 플레이스홀더였던 `README.md`를 스택/실행 방법/문서 링크가 포함된 정상 문서로 교체.
 
-## 아직 남은 항목 (P1 — 다음 단계)
+## P1 — 완료된 항목
 
-- [ ] 핵심 검증 로직(`lib/validation.ts`, `lib/mock-analysis.ts`)에 대한 유닛 테스트 추가
-- [ ] GitHub Actions로 `next build` 게이트 구성 (현재 CI 없음)
-- [ ] 클라이언트 `fetch`에 `AbortController` 기반 타임아웃 추가 (`app/start/page.tsx`) — 서버 무응답 극단 상황 대비
-- [ ] Rate limit을 공유 스토어(Upstash Redis 등)로 전환 검토 — 멀티 인스턴스 환경에서 엄격한 제한이 필요할 경우
+### 6. 핵심 검증 로직 유닛 테스트 추가
+- **문제:** `lib/validation.ts`(PRD 4.2/5.1~5.3 입력 검증)와 `lib/mock-analysis.ts`의 `validateAnalysisResult`(PRD 4.4/5.6/5.7 결과 검증)가 테스트 없이 자유 수정 가능한 상태였음 — 예외 처리 10개 요구사항이 걸려 있어 회귀 위험이 큼.
+- **조치:** `vitest`를 devDependency로 추가하고 `vitest.config.mts`(경로 별칭 `@/*` 포함) 구성. 테스트 3개 파일, 총 24개 케이스 작성:
+  - `lib/validation.test.ts` — 빈 값/공백/최소·최대 글자 수/경계값(2자, 50자, 1,000자)/'없음' 입력 케이스
+  - `lib/mock-analysis.test.ts` — 핵심 역량 5~7개 경계값, 부족 역량 존재, 준비 항목 3개 미만 실패(PRD 5.7), `how`/`nextAction` 누락 실패, 형식이 아예 다른 값(null/문자열 등) 실패(PRD 5.6), `generateMockAnalysis`가 여러 직무 분기에서도 항상 검증을 통과하는지
+  - `lib/rate-limit.test.ts` — 제한 횟수 이내 통과, 초과 시 차단, 키(IP)별 독립 카운트
+- **실행:** `pnpm test` (package.json에 스크립트 추가). 전체 통과 확인.
+
+### 7. GitHub Actions CI 구성
+- **문제:** `.github/workflows`가 없어 PR/푸시 시 빌드·테스트가 자동 검증되지 않았음.
+- **조치:** `.github/workflows/ci.yml` 추가 — `main` 브랜치 push/PR마다 `pnpm install --frozen-lockfile` → `pnpm test` → `pnpm build` 순으로 게이트.
+- **부수 조치:** 작업 중 로컬 pnpm 버전(11.x)과 커밋된 `pnpm-lock.yaml`(lockfileVersion 9.0, pnpm v10 계열)이 달라 `ERR_PNPM_UNEXPECTED_STORE`가 발생한 것을 확인 — 재발 방지를 위해 `package.json`에 `"packageManager": "pnpm@10.34.5"` 고정. CI도 `pnpm/action-setup`으로 동일 버전 계열을 사용.
+
+### 8. 클라이언트 fetch 타임아웃 추가
+- **문제:** 서버(`app/api/analyze/route.ts`)는 18초 내부 타임아웃이 있지만, 클라이언트 `fetch`(`app/start/page.tsx`)는 자체 타임아웃이 없어 서버가 응답을 전혀 못 주는 극단 상황(네트워크 계층 장애 등)에서 무한 로딩으로 이어질 수 있었음.
+- **조치:** `AbortController` + 20초 타이머를 `fetch`에 연결(PRD 4.5 "20초 이내" 기준과 일치). 타임아웃으로 중단된 경우(`AbortError`)는 기존 `network_error`가 아닌 `timeout` 에러 화면(PRD 5.5 문구)으로 정확히 분기하도록 catch 블록 수정.
+- **검증:** `next build` 정상 통과, 기존 24개 유닛 테스트 영향 없음.
+
+## P1 — 검토 후 보류 (구현하지 않음)
+
+### 9. Rate limit을 공유 스토어(Redis 등)로 전환
+- **현재 상태:** `lib/rate-limit.ts`는 함수 인스턴스별 인메모리 카운터라서, 여러 인스턴스에 걸친 전역 제한은 아님 (P0 항목 2 참고).
+- **보류 이유:** 이를 강한 보장으로 바꾸려면 Upstash Redis 등 새 외부 스토리지 프로비저닝(Vercel Marketplace 연동)이 필요한 인프라 결정 사항 — 임의로 새 유료/외부 서비스를 추가하지 않고, 필요 여부를 먼저 확인하는 것이 맞다고 판단해 보류함.
+- **다음 단계:** 실제 트래픽에서 인메모리 방식의 한계가 문제가 되면(예: 여러 리전/인스턴스로 분산되어 우회당하는 사례 발생) 그때 Marketplace 연동 여부를 논의.
 
 ## 참고
 
