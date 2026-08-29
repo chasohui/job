@@ -6,6 +6,22 @@ import { getClientKey, isRateLimited } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * PRD 4.4: 검증 실패 시 정상 결과로 표시하지 않고 재시도한다.
+ * 외부 타임아웃 레이스(18초) 안에서 최대 2회까지 Gemini를 다시 호출한다.
+ */
+async function analyzeWithRetry(input: PrepInput, attempts = 2) {
+  let lastError: unknown
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await analyzeWithGemini(input)
+    } catch (err) {
+      lastError = err
+    }
+  }
+  throw lastError
+}
+
 export async function POST(request: Request) {
   try {
     if (isRateLimited(getClientKey(request))) {
@@ -39,7 +55,7 @@ export async function POST(request: Request) {
     let analysisResult
     try {
       if (process.env.GEMINI_API_KEY) {
-        analysisResult = await Promise.race([analyzeWithGemini(input), timeoutPromise])
+        analysisResult = await Promise.race([analyzeWithRetry(input), timeoutPromise])
       } else {
         // API 키 미설정 시 Mock 폴백
         analysisResult = generateMockAnalysis(input)

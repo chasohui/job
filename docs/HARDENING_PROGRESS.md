@@ -1,7 +1,7 @@
 # 프로덕션 하드닝 진행 상황
 
 > **작성 일자:** 2026-08-29
-> **배경:** 배포 전 코드베이스 점검에서 발견된 항목 처리 기록 (P0 → P1 순)
+> **배경:** 배포 전 코드베이스 점검에서 발견된 항목 처리 기록 (P0 → P1 → P2 순)
 
 ## P0 — 완료된 항목
 
@@ -56,6 +56,40 @@
 - **현재 상태:** `lib/rate-limit.ts`는 함수 인스턴스별 인메모리 카운터라서, 여러 인스턴스에 걸친 전역 제한은 아님 (P0 항목 2 참고).
 - **보류 이유:** 이를 강한 보장으로 바꾸려면 Upstash Redis 등 새 외부 스토리지 프로비저닝(Vercel Marketplace 연동)이 필요한 인프라 결정 사항 — 임의로 새 유료/외부 서비스를 추가하지 않고, 필요 여부를 먼저 확인하는 것이 맞다고 판단해 보류함.
 - **다음 단계:** 실제 트래픽에서 인메모리 방식의 한계가 문제가 되면(예: 여러 리전/인스턴스로 분산되어 우회당하는 사례 발생) 그때 Marketplace 연동 여부를 논의.
+
+## P2 — 완료된 항목
+
+### 10. Gemini 검증 실패 시 재시도 로직 추가
+- **문제:** PRD 4.4는 "조건을 충족하지 못하면 정상 결과로 표시하지 않고 **재시도**한다"고 명시하는데, 실제 구현(`app/api/analyze/route.ts`)은 Gemini 호출/검증 실패 시 재시도 없이 곧바로 mock 데이터로 조용히 대체하고 있었음 — 사용자가 실제 AI 분석을 기대했는데 정형화된 mock 결과를 AI 결과처럼 받을 수 있는 스펙 괴리였음.
+- **조치:** `analyzeWithRetry()` 헬퍼를 추가해 Gemini 호출을 최대 2회까지 재시도하도록 변경 (`app/api/analyze/route.ts`). 기존 18초 타임아웃 레이스 안에서 동작하므로 PRD 4.5의 20초 제한은 그대로 유지됨. 재시도가 모두 실패한 경우에만 기존처럼 mock으로 폴백.
+
+### 11. 미사용 v0 스캐폴딩 자산 정리
+- **문제:** `public/placeholder.jpg`, `placeholder.svg`, `placeholder-logo.png/svg`, `placeholder-user.jpg` 5개 파일이 코드 어디서도 참조되지 않은 채 남아 있었음.
+- **조치:** 전체 코드베이스에서 참조 여부를 확인 후 5개 파일 모두 삭제.
+
+### 12. 분석 퍼널 커스텀 이벤트 추가
+- **문제:** `@vercel/analytics`가 페이지뷰만 수집해 입력 완료율, 분석 성공/실패율 등 실제 서비스 지표를 알 수 없었음.
+- **조치:** `app/start/page.tsx`에 `track()` 이벤트 3종 추가 — `analysis_started`(분석 요청 시작), `analysis_completed`(정상 결과 수신), `analysis_failed`(실패 사유를 `reason` 속성으로 포함: `AI_FAIL`/`FORMAT_ERROR`/`RATE_LIMITED`/`TIMEOUT`/`NETWORK_ERROR` 등). 사용자가 입력한 전공/직무/준비 상황 등 개인 식별 가능한 자유 텍스트는 이벤트 속성에 포함하지 않음.
+
+### 13. SEO 기본 파일 추가
+- **문제:** `app/robots.ts`, `app/sitemap.ts`가 없어 검색엔진이 크롤링 정책과 사이트맵을 알 수 없었음.
+- **조치:** Next.js App Router의 메타데이터 파일 컨벤션으로 `app/robots.ts`(`/api/` 경로 차단), `app/sitemap.ts`(`/`, `/start` 등록) 추가. 도메인은 `VERCEL_PROJECT_PRODUCTION_URL` 환경변수를 사용해 배포 환경에 자동으로 맞춰짐.
+- **검증:** `next build` 결과 `/robots.txt`, `/sitemap.xml` 라우트가 정상 생성됨을 확인.
+
+### 14. Playwright E2E 테스트 추가
+- **문제:** 유닛 테스트 24건은 순수 로직만 검증하고, 입력→확인→로딩→결과로 이어지는 전체 사용자 플로우가 브라우저에서 실제로 동작하는지 검증하는 테스트는 없었음.
+- **조치:** `@playwright/test` 도입, `playwright.config.ts`(프로덕션 빌드로 서버 구동 후 테스트) 구성, `e2e/golden-path.spec.ts`에 4개 시나리오 작성:
+  - 정상 플로우: 입력 → 확인 → 분석 → 결과 화면 렌더링 (API는 route 인터셉트로 모킹해 실제 Gemini 호출 없이 결정적으로 테스트)
+  - 필수 입력 누락 시 오류 메시지 표시 및 입력값 유지 (PRD 5.1)
+  - AI 분석 실패 시 에러 화면과 `다시 시도` 버튼 노출 (PRD 5.4)
+  - **P0 항목 1(시나리오 위젯 프로덕션 노출 차단)의 회귀 방지 테스트** — 프로덕션 빌드에서 위젯이 렌더링되지 않음을 자동 검증
+- **실행:** `pnpm test:e2e` (로컬), CI에도 `playwright install --with-deps chromium` → `pnpm test:e2e` 단계로 통합.
+
+## P2 — 검토 후 별도 조치 불필요로 확인
+
+### 15. 접근성 대비 재검증
+- **확인 내용:** `design.md`에 명시된 "soft-peach(#F4A28E) 배경 + sage-text(#4A5D54) 조합, AA 미달" 경고는 **이전 디자인 반복(설계 초안) 시점의 것**으로, 실제 코드(`app/globals.css`, `components/`)를 전수 검색한 결과 해당 색상 조합은 어디에도 사용되고 있지 않음을 확인함 (해당 값은 `docs/DESIGN_TONE_MANNER_PLAN_V2.md`와 `docs/archive/code.html`에만 존재 — 둘 다 과거 참조 문서).
+- **결론:** 현재 `globals.css`의 실제 토큰(primary, highlight, highlight-foreground 등)은 design.md "Soft Spring" 섹션에 문서화된, 이미 대비비 검증(6.44:1, 5.51:1 등 AA 통과)이 완료된 값과 정확히 일치함. **코드 변경 불필요**, 검증만으로 종결.
 
 ## 참고
 

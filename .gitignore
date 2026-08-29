@@ -18,3 +18,8 @@ node_modules
 .DS_Store
 .vercel
 .env*
+
+# Test artifacts
+test-results/
+playwright-report/
+*.tsbuildinfo

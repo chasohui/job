@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { track } from '@vercel/analytics'
 import {
   ClockAlertIcon,
   FileWarningIcon,
@@ -117,6 +118,8 @@ export default function Page() {
     async function fetchAnalysis() {
       try {
         if (scenario === 'success') {
+          track('analysis_started')
+
           // 서버 자체 타임아웃(18초)이 응답을 못 주는 극단 상황을 대비한 클라이언트 측 최후 방어선 (PRD 4.5, 20초)
           const controller = new AbortController()
           const abortTimer = setTimeout(() => controller.abort(), 20000)
@@ -138,9 +141,11 @@ export default function Page() {
           if (!isCancelled) {
             clearInterval(phaseTimer)
             if (data.success && validateAnalysisResult(data.data)) {
+              track('analysis_completed')
               setAnalysis(data.data)
               setStage('result')
             } else {
+              track('analysis_failed', { reason: data?.error ?? 'FORMAT_ERROR' })
               setScenario('ai_fail')
               setStage('error')
             }
@@ -157,7 +162,9 @@ export default function Page() {
       } catch (err) {
         if (!isCancelled) {
           clearInterval(phaseTimer)
-          setScenario(err instanceof DOMException && err.name === 'AbortError' ? 'timeout' : 'network_error')
+          const nextScenario = err instanceof DOMException && err.name === 'AbortError' ? 'timeout' : 'network_error'
+          track('analysis_failed', { reason: nextScenario.toUpperCase() })
+          setScenario(nextScenario)
           setStage('error')
         }
       }
