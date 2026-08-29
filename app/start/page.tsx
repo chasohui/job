@@ -239,7 +239,9 @@ export default function Page() {
         )}
       </main>
 
-      <ScenarioPreview value={scenario} onChange={setScenario} />
+      {process.env.NODE_ENV !== 'production' && (
+        <ScenarioPreview value={scenario} onChange={setScenario} />
+      )}
     </div>
   )
 }

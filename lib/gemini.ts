@@ -25,6 +25,7 @@ const ANALYSIS_SCHEMA: ResponseSchema = {
           description: { type: SchemaType.STRING },
           readiness: {
             type: SchemaType.STRING,
+            format: 'enum',
             enum: ['준비됨', '일부 준비', '보완 필요'],
           },
         },

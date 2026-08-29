@@ -2,11 +2,19 @@ import { NextResponse } from 'next/server'
 import { isPrepInputValid, validatePrepInput } from '@/lib/validation'
 import { analyzeWithGemini } from '@/lib/gemini'
 import { generateMockAnalysis, validateAnalysisResult, type PrepInput } from '@/lib/mock-analysis'
+import { getClientKey, isRateLimited } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
+    if (isRateLimited(getClientKey(request))) {
+      return NextResponse.json(
+        { success: false, error: 'RATE_LIMITED' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const input: PrepInput = {
       major: String(body?.major || ''),
