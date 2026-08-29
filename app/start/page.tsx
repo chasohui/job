@@ -85,6 +85,17 @@ const ERROR_CONFIG: Record<
   },
 }
 
+// 서버(app/api/analyze/route.ts)가 반환하는 error 코드를 화면에 보여줄 시나리오로 매핑한다.
+const ERROR_CODE_TO_SCENARIO: Record<string, Exclude<ScenarioKey, 'success'>> = {
+  TIMEOUT: 'timeout',
+  FORMAT_ERROR: 'format_error',
+  IRRELEVANT_RESULT: 'meaningless',
+  AI_FAIL: 'ai_fail',
+  INVALID_INPUT: 'ai_fail',
+  INTERNAL_ERROR: 'ai_fail',
+  RATE_LIMITED: 'ai_fail',
+}
+
 const STAGE_INDEX: Record<Stage, number> = {
   input: 0,
   confirm: 1,
@@ -145,8 +156,9 @@ export default function Page() {
               setAnalysis(data.data)
               setStage('result')
             } else {
-              track('analysis_failed', { reason: data?.error ?? 'FORMAT_ERROR' })
-              setScenario('ai_fail')
+              const errorCode = data?.error ?? 'FORMAT_ERROR'
+              track('analysis_failed', { reason: errorCode })
+              setScenario(ERROR_CODE_TO_SCENARIO[errorCode] ?? 'ai_fail')
               setStage('error')
             }
           }

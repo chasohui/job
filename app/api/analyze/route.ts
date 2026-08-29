@@ -1,20 +1,27 @@
 import { NextResponse } from 'next/server'
 import { isPrepInputValid, validatePrepInput } from '@/lib/validation'
-import { analyzeWithGemini } from '@/lib/gemini'
+import { analyzeWithGemini, checkRelevance } from '@/lib/gemini'
 import { generateMockAnalysis, validateAnalysisResult, type PrepInput } from '@/lib/mock-analysis'
 import { getClientKey, isRateLimited } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * PRD 4.4: 검증 실패 시 정상 결과로 표시하지 않고 재시도한다.
+ * PRD 4.4/5.8: 구조 검증 실패 또는 직무 무관 판정 시 정상 결과로 표시하지 않고 재시도한다.
  * 외부 타임아웃 레이스(18초) 안에서 최대 2회까지 Gemini를 다시 호출한다.
+ * 재시도를 모두 소진했는데도 직무와 무관하면(IRRELEVANT_RESULT) mock으로 대체하지 않고
+ * 그대로 사용자에게 입력을 구체화해달라는 신호를 준다 — PRD 5.8은 "정상 결과처럼 보이는
+ * 무관한 답변"을 막는 게 목적이라, 다른 실패(네트워크/형식 오류)와 달리 mock 폴백 대상이 아니다.
  */
 async function analyzeWithRetry(input: PrepInput, attempts = 2) {
   let lastError: unknown
   for (let i = 0; i < attempts; i++) {
     try {
-      return await analyzeWithGemini(input)
+      const result = await analyzeWithGemini(input)
+      if (await checkRelevance(input, result)) {
+        return result
+      }
+      lastError = new Error('IRRELEVANT_RESULT')
     } catch (err) {
       lastError = err
     }
@@ -66,6 +73,13 @@ export async function POST(request: Request) {
         return NextResponse.json(
           { success: false, error: 'TIMEOUT' },
           { status: 504 }
+        )
+      }
+
+      if (apiError?.message === 'IRRELEVANT_RESULT') {
+        return NextResponse.json(
+          { success: false, error: 'IRRELEVANT_RESULT' },
+          { status: 422 }
         )
       }
 

@@ -124,3 +124,59 @@ export async function analyzeWithGemini(input: PrepInput): Promise<AnalysisResul
 
   return parsed
 }
+
+const RELEVANCE_SCHEMA: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    relevant: {
+      type: SchemaType.BOOLEAN,
+      description: '핵심 역량/준비 항목이 해당 직무에 실질적으로 특화되어 있으면 true',
+    },
+  },
+  required: ['relevant'],
+}
+
+/**
+ * PRD 5.8 — 생성된 분석이 사용자가 입력한 희망 직무와 실제로 관련 있는지 2차 판정한다.
+ * 구조 검증(validateAnalysisResult)은 형식만 보고 내용의 관련성은 보지 않기 때문에,
+ * 일반적인 취업 조언만 나열된 "형식은 맞지만 알맹이가 무관한" 응답을 걸러내기 위한 안전장치.
+ *
+ * 판정 호출 자체가 실패(네트워크/파싱 오류 등)하면 결과를 막지 않고 통과시킨다(fail-open) —
+ * 이 검증은 명백히 무관한 결과를 걸러내기 위한 보조 장치일 뿐, 정상적인 결과를 판정 실패로
+ * 막아버리는 병목이 되어서는 안 된다.
+ */
+export async function checkRelevance(input: PrepInput, result: AnalysisResult): Promise<boolean> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return true
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-3.6-flash',
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: RELEVANCE_SCHEMA,
+        temperature: 0,
+      },
+      systemInstruction: `당신은 커리어 분석 결과가 실제로 특정 직무에 맞춤화되었는지 엄격하게 판정하는 검수자입니다.
+"커뮤니케이션 능력을 기르세요", "꾸준히 노력하세요" 같은 어느 직무에나 붙일 수 있는 일반론만 나열되어 있고
+해당 직무 고유의 도구/실무 맥락/전문 용어가 보이지 않으면 relevant를 false로 판정하세요.`,
+    })
+
+    const prompt = `[희망 직무] ${input.role.trim()}
+
+[생성된 핵심 역량]
+${result.coreSkills.map((s) => `- ${s.title}: ${s.description}`).join('\n')}
+
+[생성된 준비 항목]
+${result.steps.map((s) => `- ${s.title}: ${s.why}`).join('\n')}
+
+위 내용이 "${input.role.trim()}" 직무에 실질적으로 특화된 내용인지 판정해주세요.`
+
+    const judged = await model.generateContent(prompt)
+    const parsed = JSON.parse(judged.response.text())
+    return parsed?.relevant !== false
+  } catch {
+    return true
+  }
+}

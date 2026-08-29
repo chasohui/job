@@ -75,3 +75,21 @@ test('AI 분석 실패 시 에러 화면을 표시하고 재시도 버튼을 제
   await expect(page.getByText('분석에 실패했습니다.')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByRole('button', { name: '다시 시도' })).toBeVisible()
 })
+
+test('직무와 무관한 결과 판정 시 입력 수정 화면으로 안내한다 (PRD 5.8)', async ({ page }) => {
+  await page.route('**/api/analyze', async (route) => {
+    await route.fulfill({ json: { success: false, error: 'IRRELEVANT_RESULT' } })
+  })
+
+  await page.goto('/start')
+
+  await fillValidInput(page)
+  await page.getByRole('button', { name: /다음/ }).click()
+  await page.getByRole('button', { name: '분석 시작하기' }).click()
+
+  await expect(page.getByText('직무에 맞는 분석 결과를 만들지 못했습니다.')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('button', { name: '입력 수정하기' })).toBeVisible()
+
+  await page.getByRole('button', { name: '입력 수정하기' }).click()
+  await expect(page.getByLabel('희망 직무')).toHaveValue('서비스 기획자')
+})
