@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { generateContentMock, getGenerativeModelMock } = vi.hoisted(() => ({
   generateContentMock: vi.fn(),
@@ -110,5 +110,37 @@ describe('analyzeWithGemini 프롬프트 강화 (PRD 5.8 사전 예방 / few-sho
     expect(config.systemInstruction).toContain('나쁜 예')
     expect(config.systemInstruction).toContain('좋은 예')
     expect(config.systemInstruction).toContain('일반론')
+  })
+})
+
+describe('개별 Gemini 호출 타임아웃 (실서비스 장애 회귀 방지)', () => {
+  // 실서비스에서 Gemini generateContent() 호출 1건이 응답 없이 20초 이상 걸려
+  // /api/analyze의 18초 전체 예산을 통째로 잡아먹고, 재시도·Mock 폴백을 시도할
+  // 기회조차 없이 매번 TIMEOUT으로만 끝나던 장애가 있었다 (레이트리밋 근처의
+  // 소프트 스로틀링 등으로 발생). 호출 1건을 짧게 끊어 실패시켜야 재시도/Mock
+  // 폴백이 실제로 동작한다 — 이 타임아웃 동작 자체를 잠그는 회귀 테스트.
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('analyzeWithGemini는 응답 없는 호출을 무한정 기다리지 않고 실패한다', async () => {
+    vi.useFakeTimers()
+    generateContentMock.mockImplementation(() => new Promise(() => {}))
+
+    const pending = analyzeWithGemini(input)
+    const assertion = expect(pending).rejects.toThrow('GEMINI_CALL_TIMEOUT')
+
+    await vi.advanceTimersByTimeAsync(8000)
+    await assertion
+  })
+
+  it('checkRelevance는 응답 없는 호출도 제한 시간 내에 fail-open으로 처리한다', async () => {
+    vi.useFakeTimers()
+    generateContentMock.mockImplementation(() => new Promise(() => {}))
+
+    const pending = checkRelevance(input, result)
+
+    await vi.advanceTimersByTimeAsync(4000)
+    expect(await pending).toBe(true)
   })
 })

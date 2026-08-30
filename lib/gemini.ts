@@ -2,6 +2,20 @@ import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from '@google/gen
 import type { AnalysisResult, PrepInput } from './mock-analysis'
 import { validateAnalysisResult } from './mock-analysis'
 
+/**
+ * Gemini 호출 1건이 응답 없이 오래 걸리는 경우(속도 저하/레이트리밋 근처에서의
+ * 소프트 스로틀링 등)에 대비한 개별 호출 타임아웃. `app/api/analyze/route.ts`의
+ * 18초 전체 레이스만 믿으면, generateContent() 호출 1건이 그 18초를 통째로
+ * 잡아먹어 재시도/Mock 폴백을 시도할 기회조차 없이 TIMEOUT으로 끝나버린다.
+ * 각 호출을 더 짧게 끊어 실패시켜야 재시도나 Mock 폴백이 실제로 동작한다.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('GEMINI_CALL_TIMEOUT')), ms)),
+  ])
+}
+
 const ANALYSIS_SCHEMA: ResponseSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -112,7 +126,9 @@ export async function analyzeWithGemini(input: PrepInput): Promise<AnalysisResul
 
 위 정보를 바탕으로 핵심 역량(5~7개), 부족한 역량 및 판단 이유, 1단계부터 시작하는 추천 준비 순서(3개 이상)를 정해진 JSON 포맷으로 생성해주세요.`
 
-  const result = await model.generateContent(prompt)
+  // analyzeWithRetry()가 최대 2회 재시도하므로, 호출 1건당 8초로 끊어야
+  // 재시도 + Mock 폴백까지 18초 예산 안에서 시도해볼 여지가 남는다.
+  const result = await withTimeout(model.generateContent(prompt), 8000)
   const responseText = result.response.text()
 
   let parsed: unknown
@@ -188,7 +204,7 @@ ${result.steps.map((s) => `- ${s.title}: ${s.why}`).join('\n')}
 
 위 내용이 "${input.role.trim()}" 직무에 실질적으로 특화된 내용인지 판정해주세요.`
 
-    const judged = await model.generateContent(prompt)
+    const judged = await withTimeout(model.generateContent(prompt), 4000)
     const parsed = JSON.parse(judged.response.text())
     return parsed?.relevant !== false
   } catch {
