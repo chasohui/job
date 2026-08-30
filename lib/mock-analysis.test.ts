@@ -102,7 +102,15 @@ describe('generateMockAnalysis', () => {
   })
 
   it('프론트엔드 개발자 등 도메인별 분기에서도 PRD 조건을 만족한다', () => {
-    const roles = ['프론트엔드 개발자', '백엔드 개발자', '데이터 분석가', '전혀 다른 처음보는 직무']
+    const roles = [
+      '프론트엔드 개발자',
+      '백엔드 개발자',
+      '데이터 분석가',
+      '마케터',
+      'UI/UX 디자이너',
+      '영업 담당자',
+      '전혀 다른 처음보는 직무',
+    ]
     for (const role of roles) {
       const result = generateMockAnalysis({ major: '컴퓨터공학과', role, status: '없음' })
       expect(validateAnalysisResult(result)).toBe(true)

@@ -19,7 +19,7 @@ interface ScenarioPreviewProps {
 
 export function ScenarioPreview({ value, onChange }: ScenarioPreviewProps) {
   return (
-    <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+    <div className="print:hidden fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
       <Popover>
         <PopoverTrigger className="flex size-11 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition-transform hover:scale-105">
           <FlaskConicalIcon className="size-[18px]" strokeWidth={2} />

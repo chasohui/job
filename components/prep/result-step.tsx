@@ -1,13 +1,16 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ArrowRightIcon, RotateCcwIcon, Sparkle } from 'lucide-react'
+import { ArrowRightIcon, ClipboardCopyIcon, PrinterIcon, RotateCcwIcon, Sparkle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SectionHeader } from '@/components/prep/section-header'
 import { SkillCard } from '@/components/prep/skill-card'
 import { RecommendationStepCard } from '@/components/prep/recommendation-step-card'
 import type { AnalysisResult, PrepInput } from '@/lib/mock-analysis'
+import { formatAnalysisAsText } from '@/lib/export-analysis'
+import { getChecklistStorageKey, loadChecklist, setChecklistItem } from '@/lib/checklist-storage'
 
 interface ResultStepProps {
   input: PrepInput
@@ -16,6 +19,31 @@ interface ResultStepProps {
 }
 
 export function ResultStep({ input, analysis, onRestart }: ResultStepProps) {
+  const [checklist, setChecklist] = useState<Record<number, boolean>>({})
+  const checklistKey = getChecklistStorageKey(input)
+
+  useEffect(() => {
+    setChecklist(loadChecklist(checklistKey))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checklistKey])
+
+  function handleToggleStep(order: number) {
+    setChecklist((prev) => {
+      const nextChecked = !prev[order]
+      setChecklistItem(checklistKey, order, nextChecked)
+      return { ...prev, [order]: nextChecked }
+    })
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(formatAnalysisAsText(input, analysis))
+      toast.success('결과를 복사했어요. 원하는 곳에 붙여넣어보세요.')
+    } catch {
+      toast.error('복사에 실패했습니다. 다시 시도해주세요.')
+    }
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-14 px-4 pt-10 pb-24 sm:px-6 sm:pt-14">
       {/* 1. 분석 요약 */}
@@ -91,6 +119,8 @@ export function ResultStep({ input, analysis, onRestart }: ResultStepProps) {
               key={step.order}
               step={step}
               isLast={index === analysis.steps.length - 1}
+              checked={!!checklist[step.order]}
+              onToggleChecked={() => handleToggleStep(step.order)}
               style={{ animationDelay: `${index * 120}ms` }}
             />
           ))}
@@ -110,15 +140,23 @@ export function ResultStep({ input, analysis, onRestart }: ResultStepProps) {
           onClick={() =>
             toast.success('좋아요! 이 단계부터 준비를 시작해보세요.')
           }
-          className="h-12 w-fit bg-highlight-foreground text-highlight hover:bg-highlight-foreground/85 sm:px-6"
+          className="print:hidden h-12 w-fit bg-highlight-foreground text-highlight hover:bg-highlight-foreground/85 sm:px-6"
         >
           준비 시작하기
           <ArrowRightIcon data-icon="inline-end" />
         </Button>
       </section>
 
-      {/* 6. 다시 분석하기 */}
-      <div className="flex justify-center">
+      {/* 6. 결과 내보내기 및 다시 분석하기 */}
+      <div className="print:hidden flex flex-wrap items-center justify-center gap-2">
+        <Button variant="outline" onClick={handleCopy}>
+          <ClipboardCopyIcon data-icon="inline-start" />
+          결과 복사하기
+        </Button>
+        <Button variant="outline" onClick={() => window.print()}>
+          <PrinterIcon data-icon="inline-start" />
+          인쇄하기
+        </Button>
         <Button
           variant="ghost"
           onClick={onRestart}

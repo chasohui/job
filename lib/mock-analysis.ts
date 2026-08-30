@@ -418,7 +418,298 @@ export function generateMockAnalysis(input: PrepInput): AnalysisResult {
     }
   }
 
-  // 4. 기본/서비스 기획자 (Default)
+  // 4. 마케터
+  if (lowerRole.includes('마케팅') || lowerRole.includes('marketing') || lowerRole.includes('마케터')) {
+    return {
+      tags: [major, role, '퍼포먼스 마케팅 단계'],
+      summary: `${major} 배경을 살려 데이터 기반으로 캠페인을 기획하고 성과를 검증하는 마케팅 실무 역량을 체계적으로 쌓을 수 있습니다.`,
+      coreSkills: [
+        {
+          id: 'mk-strategy',
+          title: '마케팅 전략 및 타겟 설정',
+          description: '시장/경쟁사 분석을 바탕으로 타겟 고객과 포지셔닝을 정의하는 능력',
+          readiness: '일부 준비',
+        },
+        {
+          id: 'mk-performance',
+          title: '퍼포먼스 마케팅 및 매체 운영',
+          description: '메타/구글 등 광고 매체를 직접 운영하며 ROAS를 관리하는 능력',
+          readiness: '보완 필요',
+        },
+        {
+          id: 'mk-content',
+          title: '콘텐츠 기획 및 카피라이팅',
+          description: '채널별 톤앤매너에 맞는 콘텐츠와 설득력 있는 카피를 제작하는 능력',
+          readiness: '일부 준비',
+        },
+        {
+          id: 'mk-data',
+          title: '마케팅 데이터 분석',
+          description: 'GA4 등 분석 툴로 퍼널 전환율을 추적하고 개선 포인트를 도출하는 능력',
+          readiness: '보완 필요',
+        },
+        {
+          id: 'mk-brand',
+          title: '브랜드 커뮤니케이션',
+          description: '일관된 브랜드 메시지를 다양한 채널에 맞게 확산하는 능력',
+          readiness: '준비됨',
+        },
+        {
+          id: 'mk-collab',
+          title: '유관 부서 협업 및 캠페인 관리',
+          description: '디자인/영업/제품팀과 협업해 캠페인을 기획부터 실행까지 관리하는 능력',
+          readiness: '준비됨',
+        },
+      ],
+      gapSkills: [
+        {
+          id: 'mk-gap-performance',
+          title: '실제 광고 예산 집행 경험',
+          description: '소액이라도 직접 광고비를 집행하고 성과를 개선해본 경험이 부족해요.',
+        },
+        {
+          id: 'mk-gap-data',
+          title: '퍼널 데이터 분석 툴 활용 경험',
+          description: 'GA4/픽셀 등으로 실제 캠페인 성과를 추적해본 경험이 필요해요.',
+        },
+      ],
+      steps: [
+        {
+          order: 1,
+          title: '마케팅 기초 이론 및 채널별 특성 학습',
+          why: '채널마다 다른 알고리즘과 사용자 행동 패턴을 이해해야 효율적인 캠페인을 설계할 수 있습니다.',
+          how: [
+            '퍼포먼스 마케팅 핵심 지표(CPA, ROAS, CTR) 정의 학습',
+            '메타/구글 광고 관리자 UI 및 캠페인 구조 익히기',
+            '경쟁사 3곳의 광고 소재와 랜딩페이지 벤치마킹',
+          ],
+          nextAction: '관심 브랜드의 인스타그램 광고 3개를 캡처해 소구 포인트를 분석해보세요.',
+        },
+        {
+          order: 2,
+          title: '소액 예산으로 직접 캠페인 운영해보기',
+          why: '이론을 넘어 실제 예산을 집행하며 데이터를 해석하는 감각을 길러야 합니다.',
+          how: [
+            '개인 프로젝트/SNS 계정으로 소액 광고 캠페인 1건 집행',
+            'A/B 테스트로 소재 2종 성과 비교',
+            'GA4로 유입부터 전환까지 퍼널 추적 설정',
+          ],
+          nextAction: '5만원 이하 예산으로 SNS 광고 캠페인을 1주일간 운영해보세요.',
+        },
+        {
+          order: 3,
+          title: '캠페인 성과 리포트 및 개선 제안서 작성',
+          why: '성과를 수치로 증명하고 다음 액션을 제안하는 능력이 실무 역량의 핵심입니다.',
+          how: [
+            '캠페인 전후 지표 비교 리포트 작성',
+            '개선 가설과 다음 캠페인 실행 계획 수립',
+            'Notion/PPT로 결과 요약 포트폴리오 제작',
+          ],
+          nextAction: '운영한 캠페인의 결과를 1페이지 리포트로 정리해보세요.',
+        },
+      ],
+      finalAction: {
+        message: '오늘부터 시작해보세요!',
+        detail: '관심 브랜드의 광고 소재 3개를 분석하고 개선 아이디어를 메모해보세요.',
+      },
+    }
+  }
+
+  // 5. UI/UX 디자이너
+  if (lowerRole.includes('디자인') || lowerRole.includes('design') || lowerRole.includes('디자이너')) {
+    return {
+      tags: [major, role, 'UI/UX 포트폴리오 단계'],
+      summary: `${major} 배경을 살려 사용자 중심의 문제 해결 과정을 보여주는 UI/UX 디자인 역량과 포트폴리오를 완성할 수 있습니다.`,
+      coreSkills: [
+        {
+          id: 'ux-research',
+          title: '사용자 리서치 및 문제 정의',
+          description: '인터뷰/설문 등으로 사용자 니즈를 발견하고 디자인 문제로 정의하는 능력',
+          readiness: '일부 준비',
+        },
+        {
+          id: 'ux-ia',
+          title: '정보 구조(IA) 및 플로우 설계',
+          description: '복잡한 기능을 사용자가 헤매지 않는 흐름으로 구조화하는 능력',
+          readiness: '일부 준비',
+        },
+        {
+          id: 'ux-wireframe',
+          title: '와이어프레임 및 프로토타이핑',
+          description: 'Figma로 저충실도부터 고충실도 프로토타입까지 제작하는 능력',
+          readiness: '준비됨',
+        },
+        {
+          id: 'ux-visual',
+          title: '비주얼 디자인 및 디자인 시스템',
+          description: '일관된 컴포넌트와 그리드 기반의 비주얼 디자인 시스템을 구축하는 능력',
+          readiness: '보완 필요',
+        },
+        {
+          id: 'ux-test',
+          title: '사용성 테스트 및 반복 개선',
+          description: '프로토타입을 실제 사용자에게 테스트하고 피드백을 반영해 개선하는 능력',
+          readiness: '보완 필요',
+        },
+        {
+          id: 'ux-handoff',
+          title: '개발 협업 및 디자인 핸드오프',
+          description: '개발자가 오해 없이 구현할 수 있도록 스펙과 의도를 전달하는 능력',
+          readiness: '준비됨',
+        },
+      ],
+      gapSkills: [
+        {
+          id: 'ux-gap-test',
+          title: '실제 사용자 대상 사용성 테스트 경험',
+          description: '가설을 세우고 실제 사용자 반응으로 검증해본 경험이 부족해요.',
+        },
+        {
+          id: 'ux-gap-system',
+          title: '디자인 시스템 구축 경험',
+          description: '컴포넌트를 재사용 가능한 체계로 만들어본 경험이 필요해요.',
+        },
+      ],
+      steps: [
+        {
+          order: 1,
+          title: 'UX 리서치 방법론 및 Figma 툴 숙련',
+          why: '문제를 제대로 정의하지 못하면 아무리 예쁜 디자인도 사용자 문제를 해결하지 못합니다.',
+          how: [
+            '사용자 인터뷰 질문지 설계 및 진행 방법 학습',
+            'Figma Auto Layout, 컴포넌트, 변수 기능 숙달',
+            '경쟁 서비스 3개의 온보딩 플로우 비교 분석',
+          ],
+          nextAction: '주변 지인 3명을 대상으로 15분 사용자 인터뷰를 진행해보세요.',
+        },
+        {
+          order: 2,
+          title: '엔드투엔드 프로덕트 디자인 프로젝트 진행',
+          why: '리서치부터 하이파이 프로토타입까지 전체 과정을 직접 완주해봐야 합니다.',
+          how: [
+            '실제 문제 1가지를 선정해 리서치 → 와이어프레임 → 하이파이 순서로 진행',
+            '디자인 시스템(컬러/타이포/컴포넌트) 정의',
+            '5명 이상 대상 사용성 테스트 진행 및 개선',
+          ],
+          nextAction: '해결하고 싶은 불편함 1가지를 골라 로우파이 와이어프레임을 그려보세요.',
+        },
+        {
+          order: 3,
+          title: '포트폴리오 스토리텔링 및 핸드오프 문서 작성',
+          why: '결과물뿐 아니라 의사결정 과정을 설명할 수 있어야 채용 담당자를 설득할 수 있습니다.',
+          how: [
+            '문제 정의 → 가설 → 디자인 → 검증 → 회고 구조로 케이스 스터디 작성',
+            '개발 핸드오프용 스펙 문서(간격, 상태값) 정리',
+            'Figma 커뮤니티에 프로토타입 공유 및 피드백 수집',
+          ],
+          nextAction: '진행한 프로젝트 1건을 케이스 스터디 형식으로 정리해보세요.',
+        },
+      ],
+      finalAction: {
+        message: '오늘부터 시작해보세요!',
+        detail: '평소 불편했던 앱 화면 1개를 골라 개선 아이디어를 스케치해보세요.',
+      },
+    }
+  }
+
+  // 6. 영업/세일즈
+  if (lowerRole.includes('영업') || lowerRole.includes('세일즈') || lowerRole.includes('sales')) {
+    return {
+      tags: [major, role, '세일즈 역량 강화 단계'],
+      summary: `${major} 배경의 논리력과 커뮤니케이션 역량을 살려 고객의 문제를 발견하고 설득하는 영업 역량을 키울 수 있습니다.`,
+      coreSkills: [
+        {
+          id: 'sl-prospect',
+          title: '리드 발굴 및 고객 세그멘테이션',
+          description: '잠재 고객을 발굴하고 우선순위를 매겨 영업 파이프라인을 관리하는 능력',
+          readiness: '일부 준비',
+        },
+        {
+          id: 'sl-needs',
+          title: '고객 니즈 파악 및 질문 설계',
+          description: '고객의 숨은 문제를 발견하는 질문(SPIN 등)을 설계하는 능력',
+          readiness: '일부 준비',
+        },
+        {
+          id: 'sl-pitch',
+          title: '제안 및 프레젠테이션',
+          description: '고객 상황에 맞춘 설득력 있는 제안서와 발표를 구성하는 능력',
+          readiness: '보완 필요',
+        },
+        {
+          id: 'sl-negotiation',
+          title: '협상 및 클로징',
+          description: '이해관계를 조율하며 계약을 성사시키는 협상 능력',
+          readiness: '보완 필요',
+        },
+        {
+          id: 'sl-crm',
+          title: 'CRM 및 파이프라인 관리',
+          description: 'CRM 툴로 영업 단계를 기록하고 데이터 기반으로 관리하는 능력',
+          readiness: '준비됨',
+        },
+        {
+          id: 'sl-relationship',
+          title: '고객 관계 유지 및 사후관리',
+          description: '계약 이후에도 신뢰를 유지하며 추가 기회를 만드는 능력',
+          readiness: '준비됨',
+        },
+      ],
+      gapSkills: [
+        {
+          id: 'sl-gap-pitch',
+          title: '실전 제안/피칭 경험',
+          description: '실제 상대를 설득해본 경험이 부족해 논리 구성 훈련이 필요해요.',
+        },
+        {
+          id: 'sl-gap-nego',
+          title: '협상 시뮬레이션 경험',
+          description: '이견을 조율하고 조건을 협의해본 경험이 부족해요.',
+        },
+      ],
+      steps: [
+        {
+          order: 1,
+          title: '영업 프로세스 및 고객 질문법 학습',
+          why: '무작정 제품을 설명하기보다 고객의 문제를 먼저 파악하는 구조를 익혀야 합니다.',
+          how: [
+            'SPIN/BANT 등 대표 세일즈 질문 프레임워크 학습',
+            '희망 산업의 대표 제품/서비스 3개 비교 분석',
+            'CRM 툴(예: 스프레드시트 기반) 파이프라인 구조 설계',
+          ],
+          nextAction: '관심 있는 제품 하나를 골라 고객에게 던질 질문 10개를 작성해보세요.',
+        },
+        {
+          order: 2,
+          title: '모의 영업 피칭 및 제안서 작성 연습',
+          why: '실전과 유사한 환경에서 설득 논리를 검증하고 다듬어야 합니다.',
+          how: [
+            '가상의 고객 페르소나 설정 후 제안서(PT) 1건 작성',
+            '지인/스터디원 대상 모의 피칭 진행 및 피드백 수집',
+            '반박(objection)에 대응하는 답변 스크립트 준비',
+          ],
+          nextAction: '스터디원 1명에게 5분짜리 모의 제품 피칭을 해보세요.',
+        },
+        {
+          order: 3,
+          title: '협상 시뮬레이션 및 성과 스토리 정리',
+          why: '조건 조율 경험과 성과를 수치로 설명하는 능력이 신입 영업 평가의 핵심입니다.',
+          how: [
+            '가격/조건 이견이 있는 협상 롤플레이 2회 이상 진행',
+            '아르바이트/대외활동에서의 설득 성공 사례를 수치로 정리',
+            '자기소개서용 성과 스토리 3개 구조화(상황-행동-결과)',
+          ],
+          nextAction: '과거 누군가를 설득해 성과를 낸 경험 1가지를 상황-행동-결과로 정리해보세요.',
+        },
+      ],
+      finalAction: {
+        message: '오늘부터 시작해보세요!',
+        detail: '관심 있는 제품을 하나 골라 고객에게 던질 질문 리스트를 만들어보세요.',
+      },
+    }
+  }
+
+  // 7. 기본/서비스 기획자 (Default)
   return {
     tags: [major, role, '취업 준비 초기'],
     summary: `${major} 전공의 강점을 살려 ${role} 직무에 필요한 문제 해결력과 실행 로드맵을 구축할 수 있습니다.`,

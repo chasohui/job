@@ -98,7 +98,11 @@ export async function analyzeWithGemini(input: PrepInput): Promise<AnalysisResul
 2. 부족한 역량(gapSkills): 1개~3개로 구성하고, 사용자의 입력된 준비 상황과 직무 요구사항을 비교하여 왜 부족하다고 판단했는지 구체적인 사유를 작성하세요.
 3. 추천 준비 항목(steps): 반드시 최소 3개 이상의 단계(1단계 → 2단계 → 3단계...)로 구성하고, 단순 조언이 아닌 구체적인 실행 방법(how)과 오늘 당장 실행할 수 있는 다음 행동(nextAction)을 제시하세요.
 4. 사용자가 준비 상황에 '없음'이라고 입력했거나 경험이 거의 없는 경우, 비전공/초보자 관점에서 1단계부터 차근차근 기초를 쌓을 수 있는 로드맵을 작성하세요.
-5. 한국어로 친절하면서도 전문성 있고 명확한 어조로 작성하세요.`,
+5. 한국어로 친절하면서도 전문성 있고 명확한 어조로 작성하세요.
+6. 모든 핵심 역량(coreSkills)과 준비 항목(steps)에는 [희망 직무]에서 실제로 쓰이는 도구/기법/전문 용어를 최소 1개 이상 포함해, 다른 직무와 뚜렷이 구분되도록 작성하세요. "커뮤니케이션 능력을 기르세요", "책임감을 가지세요", "꾸준히 노력하세요"처럼 어떤 직무에도 붙일 수 있는 일반론은 단독 핵심 역량이나 준비 항목으로 절대 제시하지 마세요.
+   - 나쁜 예 (모델·인플루언서 직무): "커뮤니케이션 능력 - 사람들과 원활히 소통해야 합니다" → 다른 어떤 직무에도 그대로 붙일 수 있어 탈락.
+   - 좋은 예 (같은 직무): "체형 변화 대응력 - 브랜드별 표준 치수 변동에 맞춰 촬영 직전 컨디션과 자세를 즉시 조정하는 능력" → 해당 직무 고유의 실무 맥락이 드러남.
+7. [전공]과 [희망 직무]가 서로 이질적인 조합(예: 인문/예체능 전공 × 이공계 직무, 혹은 그 반대)이더라도, 전공의 강점을 막연히 나열하지 말고 그 강점이 [희망 직무] 실무에서 구체적으로 어떻게 쓰이는지 연결해 설명하세요.`,
   })
 
   const prompt = `[사용자 입력 정보]
@@ -144,6 +148,16 @@ const RELEVANCE_SCHEMA: ResponseSchema = {
  * 판정 호출 자체가 실패(네트워크/파싱 오류 등)하면 결과를 막지 않고 통과시킨다(fail-open) —
  * 이 검증은 명백히 무관한 결과를 걸러내기 위한 보조 장치일 뿐, 정상적인 결과를 판정 실패로
  * 막아버리는 병목이 되어서는 안 된다.
+ *
+ * 비용 최적화 (FEATURE_ENHANCEMENT_PLAN.md Phase C):
+ * - 이 판정 호출 자체보다 "판정 실패 → analyzeWithGemini() 전체 재호출"이 훨씬 비싸므로,
+ *   가장 큰 절감 효과는 analyzeWithGemini()의 systemInstruction에 관련성 기준(규칙 6, 7)을
+ *   직접 명시해 1차 생성의 통과율을 높이는 데서 온다 — 재시도 자체를 줄이는 접근.
+ * - 이 함수의 응답은 항상 `{"relevant": boolean}` 수준의 매우 짧은 JSON이므로
+ *   `maxOutputTokens`를 낮게 고정해 혹시 모를 과다 생성을 방지하고 지연/비용 상한을 둔다.
+ * - 더 저렴한 모델(예: -lite 계열)로 분리하는 방안도 검토했으나, 실재 여부가 확인된 모델 ID가
+ *   없어 (HARDENING_PROGRESS.md의 모델 검증 사례처럼) 확인 없이 임의로 넣지 않았다. 실제
+ *   트래픽에서 비용이 문제가 되면 Gemini `ListModels`로 저비용 모델을 검증한 뒤 교체 검토.
  */
 export async function checkRelevance(input: PrepInput, result: AnalysisResult): Promise<boolean> {
   const apiKey = process.env.GEMINI_API_KEY
@@ -157,6 +171,7 @@ export async function checkRelevance(input: PrepInput, result: AnalysisResult): 
         responseMimeType: 'application/json',
         responseSchema: RELEVANCE_SCHEMA,
         temperature: 0,
+        maxOutputTokens: 64,
       },
       systemInstruction: `당신은 커리어 분석 결과가 실제로 특정 직무에 맞춤화되었는지 엄격하게 판정하는 검수자입니다.
 "커뮤니케이션 능력을 기르세요", "꾸준히 노력하세요" 같은 어느 직무에나 붙일 수 있는 일반론만 나열되어 있고

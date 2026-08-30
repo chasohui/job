@@ -113,3 +113,9 @@
 .animate-gentle-float {
   animation: gentle-float 6s ease-in-out infinite;
 }
+
+@media print {
+  body {
+    background: white;
+  }
+}

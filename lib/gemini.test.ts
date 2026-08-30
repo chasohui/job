@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { generateContentMock } = vi.hoisted(() => ({ generateContentMock: vi.fn() }))
+const { generateContentMock, getGenerativeModelMock } = vi.hoisted(() => ({
+  generateContentMock: vi.fn(),
+  getGenerativeModelMock: vi.fn(),
+}))
 
 vi.mock('@google/generative-ai', () => ({
   // 클래스로 정의해야 `new GoogleGenerativeAI(...)` 호출이 실제로 인스턴스를 생성한다.
   GoogleGenerativeAI: class {
-    getGenerativeModel() {
+    getGenerativeModel(config: unknown) {
+      getGenerativeModelMock(config)
       return { generateContent: generateContentMock }
     }
   },
@@ -18,7 +22,7 @@ vi.mock('@google/generative-ai', () => ({
   },
 }))
 
-import { checkRelevance } from './gemini'
+import { analyzeWithGemini, checkRelevance } from './gemini'
 import type { AnalysisResult, PrepInput } from './mock-analysis'
 
 const input: PrepInput = { major: '컴퓨터공학과', role: '프론트엔드 개발자', status: '없음' }
@@ -34,6 +38,7 @@ const result: AnalysisResult = {
 
 beforeEach(() => {
   generateContentMock.mockReset()
+  getGenerativeModelMock.mockReset()
   process.env.GEMINI_API_KEY = 'test-key'
 })
 
@@ -62,5 +67,48 @@ describe('checkRelevance (PRD 5.8)', () => {
     delete process.env.GEMINI_API_KEY
     expect(await checkRelevance(input, result)).toBe(true)
     expect(generateContentMock).not.toHaveBeenCalled()
+  })
+
+  it('비용 최적화: 출력 토큰 상한(maxOutputTokens)을 두어 과다 생성을 방지한다', async () => {
+    generateContentMock.mockResolvedValue({ response: { text: () => JSON.stringify({ relevant: true }) } })
+    await checkRelevance(input, result)
+
+    expect(getGenerativeModelMock).toHaveBeenCalledTimes(1)
+    const config = getGenerativeModelMock.mock.calls[0][0] as { generationConfig: { maxOutputTokens?: number } }
+    expect(config.generationConfig.maxOutputTokens).toBeGreaterThan(0)
+    expect(config.generationConfig.maxOutputTokens).toBeLessThanOrEqual(100)
+  })
+})
+
+describe('analyzeWithGemini 프롬프트 강화 (PRD 5.8 사전 예방 / few-shot 보강)', () => {
+  const validAnalysis: AnalysisResult = {
+    tags: ['컴퓨터공학과', '프론트엔드 개발자', '1단계'],
+    summary: '요약',
+    coreSkills: Array.from({ length: 5 }, (_, i) => ({
+      id: String(i),
+      title: `역량${i}`,
+      description: '설명',
+      readiness: '일부 준비' as const,
+    })),
+    gapSkills: [{ id: 'g1', title: '부족 역량', description: '이유' }],
+    steps: [1, 2, 3].map((order) => ({
+      order,
+      title: `${order}단계`,
+      why: '이유',
+      how: ['방법'],
+      nextAction: '다음 행동',
+    })),
+    finalAction: { message: '메시지', detail: '상세' },
+  }
+
+  it('일반론 금지 규칙과 좋은 예/나쁜 예 대조(few-shot)를 systemInstruction에 포함한다', async () => {
+    generateContentMock.mockResolvedValue({ response: { text: () => JSON.stringify(validAnalysis) } })
+    await analyzeWithGemini(input)
+
+    expect(getGenerativeModelMock).toHaveBeenCalledTimes(1)
+    const config = getGenerativeModelMock.mock.calls[0][0] as { systemInstruction: string }
+    expect(config.systemInstruction).toContain('나쁜 예')
+    expect(config.systemInstruction).toContain('좋은 예')
+    expect(config.systemInstruction).toContain('일반론')
   })
 })

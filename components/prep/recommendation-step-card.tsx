@@ -5,10 +5,14 @@ import type { PrepStep } from '@/lib/mock-analysis'
 export function RecommendationStepCard({
   step,
   isLast,
+  checked,
+  onToggleChecked,
   style,
 }: {
   step: PrepStep
   isLast: boolean
+  checked: boolean
+  onToggleChecked: () => void
   style?: React.CSSProperties
 }) {
   return (
@@ -24,7 +28,12 @@ export function RecommendationStepCard({
       </div>
 
       <div className={cn('flex-1', !isLast && 'pb-8')}>
-        <div className="rounded-xl border border-border/70 bg-card p-5 sm:p-6 shadow-sm">
+        <div
+          className={cn(
+            'rounded-xl border p-5 sm:p-6 shadow-sm transition-colors',
+            checked ? 'border-success/30 bg-success/5' : 'border-border/70 bg-card'
+          )}
+        >
           <div className="flex items-center gap-2 mb-2">
             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
               {step.order}단계
@@ -32,6 +41,20 @@ export function RecommendationStepCard({
             <span className="text-xs font-medium text-muted-foreground">
               {step.order === 1 ? '최우선 준비 항목' : step.order === 2 ? '핵심 역량 강화' : '실전 완성'}
             </span>
+            <button
+              type="button"
+              onClick={onToggleChecked}
+              aria-pressed={checked}
+              className={cn(
+                'print:hidden ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors',
+                checked
+                  ? 'border-success/30 bg-success/10 text-success'
+                  : 'border-border text-muted-foreground hover:border-primary/40 hover:text-primary'
+              )}
+            >
+              <CheckIcon className="size-3.5" strokeWidth={2.5} />
+              {checked ? '완료' : '완료로 표시'}
+            </button>
           </div>
           <h3 className="font-heading text-lg font-bold text-foreground">
             {step.title}
