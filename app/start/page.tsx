@@ -111,6 +111,12 @@ export default function Page() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
   const [activePhase, setActivePhase] = useState(0)
   const [scenario, setScenario] = useState<ScenarioKey>('success')
+  // 실제로 화면에 표시 중인 에러. `scenario`는 개발용 시나리오 위젯 선택값이라
+  // 재시도해도 'success'로 되돌아가지 않는데, 예전에는 실패 시 이 값에 직접
+  // 에러 종류를 저장해 재시도할 때마다 항상 같은(마지막) 에러가 다시 표시되는
+  // 버그가 있었다. 실제 에러 상태는 이 별도 필드로 관리해 재시도 시 정상적으로
+  // 초기화되고 진짜 API를 다시 호출하도록 분리한다.
+  const [errorScenario, setErrorScenario] = useState<Exclude<ScenarioKey, 'success'> | null>(null)
 
   useEffect(() => {
     if (stage !== 'loading') return
@@ -158,15 +164,16 @@ export default function Page() {
             } else {
               const errorCode = data?.error ?? 'FORMAT_ERROR'
               track('analysis_failed', { reason: errorCode })
-              setScenario(ERROR_CODE_TO_SCENARIO[errorCode] ?? 'ai_fail')
+              setErrorScenario(ERROR_CODE_TO_SCENARIO[errorCode] ?? 'ai_fail')
               setStage('error')
             }
           }
         } else {
-          // 시나리오 테스트용 딜레이
+          // 시나리오 테스트용 딜레이 (개발용 위젯에서 고른 scenario를 그대로 보여준다)
           setTimeout(() => {
             if (!isCancelled) {
               clearInterval(phaseTimer)
+              setErrorScenario(scenario)
               setStage('error')
             }
           }, messages.length * 800 + 200)
@@ -176,7 +183,7 @@ export default function Page() {
           clearInterval(phaseTimer)
           const nextScenario = err instanceof DOMException && err.name === 'AbortError' ? 'timeout' : 'network_error'
           track('analysis_failed', { reason: nextScenario.toUpperCase() })
-          setScenario(nextScenario)
+          setErrorScenario(nextScenario)
           setStage('error')
         }
       }
@@ -192,11 +199,11 @@ export default function Page() {
   }, [stage, scenario])
 
   const stageIndex = useMemo(() => {
-    if (stage === 'error' && scenario !== 'success') {
-      return ERROR_CONFIG[scenario].retryTarget === 'input' ? 0 : 2
+    if (stage === 'error' && errorScenario) {
+      return ERROR_CONFIG[errorScenario].retryTarget === 'input' ? 0 : 2
     }
     return STAGE_INDEX[stage]
-  }, [stage, scenario])
+  }, [stage, errorScenario])
 
   function handleChange(field: keyof PrepInput, next: string) {
     setInput((prev) => ({ ...prev, [field]: next }))
@@ -219,8 +226,9 @@ export default function Page() {
   }
 
   function handleErrorAction() {
-    if (scenario === 'success') return
-    const target = ERROR_CONFIG[scenario].retryTarget
+    if (!errorScenario) return
+    const target = ERROR_CONFIG[errorScenario].retryTarget
+    setErrorScenario(null)
     setStage(target === 'input' ? 'input' : 'loading')
   }
 
@@ -257,12 +265,12 @@ export default function Page() {
           />
         )}
 
-        {stage === 'error' && scenario !== 'success' && (
+        {stage === 'error' && errorScenario && (
           <ErrorState
-            icon={ERROR_CONFIG[scenario].icon}
-            title={ERROR_CONFIG[scenario].title}
-            description={ERROR_CONFIG[scenario].description}
-            actionLabel={ERROR_CONFIG[scenario].actionLabel}
+            icon={ERROR_CONFIG[errorScenario].icon}
+            title={ERROR_CONFIG[errorScenario].title}
+            description={ERROR_CONFIG[errorScenario].description}
+            actionLabel={ERROR_CONFIG[errorScenario].actionLabel}
             onAction={handleErrorAction}
           />
         )}

@@ -76,6 +76,35 @@ test('AI 분석 실패 시 에러 화면을 표시하고 재시도 버튼을 제
   await expect(page.getByRole('button', { name: '다시 시도' })).toBeVisible()
 })
 
+test('분석 실패 후 "다시 시도"를 누르면 실제로 재요청하며, 성공하면 결과가 표시된다 (회귀 방지)', async ({ page }) => {
+  // 회귀 시나리오: 과거에는 실패 시 저장해둔 에러 상태가 재시도 후에도 초기화되지 않아,
+  // "다시 시도"를 눌러도 실제 API를 다시 호출하지 않고 항상 같은 에러 화면만 반복해서 보여줬다.
+  let callCount = 0
+  await page.route('**/api/analyze', async (route) => {
+    callCount += 1
+    if (callCount === 1) {
+      await route.fulfill({ json: { success: false, error: 'AI_FAIL' } })
+    } else {
+      await route.fulfill({ json: { success: true, data: VALID_ANALYSIS } })
+    }
+  })
+
+  await page.goto('/start')
+
+  await fillValidInput(page)
+  await page.getByRole('button', { name: /다음/ }).click()
+  await page.getByRole('button', { name: '분석 시작하기' }).click()
+
+  await expect(page.getByText('분석에 실패했습니다.')).toBeVisible({ timeout: 15_000 })
+
+  await page.getByRole('button', { name: '다시 시도' }).click()
+
+  await expect(page.getByRole('heading', { name: '직무 핵심 역량 및 내 준비 수준' })).toBeVisible({
+    timeout: 15_000,
+  })
+  expect(callCount).toBe(2)
+})
+
 test('직무와 무관한 결과 판정 시 입력 수정 화면으로 안내한다 (PRD 5.8)', async ({ page }) => {
   await page.route('**/api/analyze', async (route) => {
     await route.fulfill({ json: { success: false, error: 'IRRELEVANT_RESULT' } })
